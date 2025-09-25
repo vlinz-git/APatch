@@ -157,12 +157,24 @@ registerDownloadTask(
     project = project
 )
 
+tasks.register<Copy>("copyKpimg") {
+    from("${project.rootDir}/../KernelPatch/build/kpimg-android")
+    into("${project.projectDir}/src/main/assets")
+    rename("kpimg-android", "kpimg")
+}
+
 registerDownloadTask(
     taskName = "downloadKptools",
     srcUrl = "https://github.com/bmax121/KernelPatch/releases/download/$kernelPatchVersion/kptools-android",
     destPath = "${project.projectDir}/libs/arm64-v8a/libkptools.so",
     project = project
 )
+
+tasks.register<Copy>("copyKptools") {
+    from("${project.rootDir}/../KernelPatch/build/kptools-android")
+    into("${project.projectDir}/libs/arm64-v8a")
+    rename("kptools-android", "libkptools.so")
+}
 
 // Compat kp version less than 0.10.7
 // TODO: Remove in future
@@ -184,8 +196,10 @@ tasks.register<Copy>("mergeScripts") {
 }
 
 tasks.getByName("preBuild").dependsOn(
-    "downloadKpimg",
-    "downloadKptools",
+    //    "downloadKpimg",
+    "copyKpimg",
+    //    "downloadKptools",
+    "copyKptools",
     "downloadCompatKpatch",
     "mergeScripts",
 )
@@ -193,7 +207,8 @@ tasks.getByName("preBuild").dependsOn(
 // https://github.com/bbqsrc/cargo-ndk
 // cargo ndk -t arm64-v8a build --release
 tasks.register<Exec>("cargoBuild") {
-    executable("cargo")
+    //    executable("cargo")
+    executable("/opt/homebrew/opt/rustup/bin/cargo")   //环境变量中找不到cargo，这里改成绝对路径
     args("ndk", "-t", "arm64-v8a", "build", "--release")
     workingDir("${project.rootDir}/apd")
 }
@@ -212,7 +227,8 @@ tasks.configureEach {
 }
 
 tasks.register<Exec>("cargoClean") {
-    executable("cargo")
+    //    executable("cargo")
+    executable("/opt/homebrew/opt/rustup/bin/cargo")   //环境变量中找不到cargo，这里改成绝对路径
     args("clean")
     workingDir("${project.rootDir}/apd")
 }
